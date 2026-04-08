@@ -1,7 +1,7 @@
 package com.jnu.hardvocabguard.ui.home
 
+import android.content.Intent
 import android.provider.Settings
-import android.app.Activity
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.foundation.layout.Arrangement
