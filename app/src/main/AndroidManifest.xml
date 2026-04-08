@@ -68,7 +68,9 @@
 
         <receiver
             android:name=".admin.UninstallProtectionAdminReceiver"
-            android:exported="false"
+            android:exported="true"
+            android:label="@string/device_admin_label"
+            android:description="@string/device_admin_desc"
             android:permission="android.permission.BIND_DEVICE_ADMIN">
             <meta-data
                 android:name="android.app.device_admin"

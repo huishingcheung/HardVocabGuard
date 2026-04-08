@@ -104,8 +104,8 @@ class ProgressOverlayController(
             x = 24
             y = 120
         }
-        wm.addView(view, lp)
-        added = true
+        val ok = runCatching { wm.addView(view, lp) }.isSuccess
+        added = ok
     }
 
     private fun removeIfNeeded() {

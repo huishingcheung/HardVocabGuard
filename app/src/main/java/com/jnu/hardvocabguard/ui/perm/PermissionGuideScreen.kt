@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.jnu.hardvocabguard.admin.UninstallProtectionAdminReceiver
+import com.jnu.hardvocabguard.perm.PermissionStatus
 
 /**
  * 权限引导页：针对 Hyper OS 的权限回收/电池管控，做分步引导。
@@ -75,7 +76,7 @@ fun PermissionGuideScreen(
             Button(onClick = {
                 context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             }) {
-                Text("2. 开启使用情况访问")
+                Text(if (PermissionStatus.hasUsageAccess(context)) "2. 使用情况访问已开启" else "2. 开启使用情况访问")
             }
 
             Button(onClick = {

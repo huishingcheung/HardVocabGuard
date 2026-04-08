@@ -1,11 +1,13 @@
 package com.jnu.hardvocabguard.ui.home
 
 import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -15,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jnu.hardvocabguard.data.SettingsStore
+import com.jnu.hardvocabguard.HardVocabGuardApp
+import com.jnu.hardvocabguard.CrashStore
+import com.jnu.hardvocabguard.perm.PermissionStatus
 import com.jnu.hardvocabguard.domain.RuleMode
 import com.jnu.hardvocabguard.security.PasswordHasher
 import com.jnu.hardvocabguard.service.SupervisionForegroundService
@@ -53,6 +59,19 @@ fun HomeScreen(
 
     var emergencyPwd by remember { mutableStateOf("") }
     val emergencyHash by settings.emergencyHashFlow().collectAsStateWithLifecycle(initialValue = null)
+
+    var showPermDialog by remember { mutableStateOf(false) }
+    var crashText by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        if (crashText != null) return@LaunchedEffect
+        val app = context.applicationContext
+        crashText = if (app is HardVocabGuardApp) {
+            kotlinx.coroutines.withContext(Dispatchers.IO) { CrashStore.readAndClear(app) }
+        } else {
+            null
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -97,6 +116,17 @@ fun HomeScreen(
             )
 
             Button(onClick = {
+                val usageOk = PermissionStatus.hasUsageAccess(context)
+                val a11yOk = PermissionStatus.isAccessibilityServiceEnabled(
+                    context = context,
+                    serviceClassName = "com.jnu.hardvocabguard.accessibility.GuardAccessibilityService",
+                )
+
+                if (!usageOk || !a11yOk) {
+                    showPermDialog = true
+                    return@Button
+                }
+
                 val mins = minutes.toLongOrNull() ?: 30L
                 val w = words.toIntOrNull() ?: 50
                 SupervisionForegroundService.start(
@@ -122,6 +152,18 @@ fun HomeScreen(
             }
 
             Text(if (emergencyHash.isNullOrBlank()) "紧急解锁：未设置" else "紧急解锁：已设置")
+
+            if (!crashText.isNullOrBlank()) {
+                Text("上次启动发生崩溃（已记录本地日志）")
+                OutlinedTextField(
+                    value = crashText ?: "",
+                    onValueChange = {},
+                    label = { Text("崩溃日志") },
+                    readOnly = true,
+                    maxLines = 6,
+                )
+            }
+
             OutlinedTextField(
                 value = emergencyPwd,
                 onValueChange = { emergencyPwd = it.filter { c -> c.isDigit() }.take(6) },
@@ -139,5 +181,32 @@ fun HomeScreen(
                 Text("保存紧急密码")
             }
         }
+    }
+
+    if (showPermDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermDialog = false },
+            title = { Text("需要先开启授权") },
+            text = {
+                Text(
+                    "监督模式依赖两项系统授权：\n" +
+                        "1) 无障碍服务：用于检测违规与显示悬浮进度\n" +
+                        "2) 使用情况访问：用于统计不背单词前台时长\n\n" +
+                        "请先在系统设置中开启后再回来启动监督。"
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showPermDialog = false
+                    context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                }) { Text("去开无障碍") }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showPermDialog = false
+                    context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                }) { Text("去开使用情况") }
+            }
+        )
     }
 }

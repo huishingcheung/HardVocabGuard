@@ -26,7 +26,10 @@ class ForegroundUsageTracker(context: Context) {
             lastQueryTime = nowMillis - 5_000L
         }
 
-        val events = usm.queryEvents(lastQueryTime, nowMillis)
+        val events = runCatching { usm.queryEvents(lastQueryTime, nowMillis) }.getOrNull() ?: run {
+            lastQueryTime = nowMillis
+            return 0L
+        }
         lastQueryTime = nowMillis
         return consume(events, nowMillis, targetPackage)
     }
@@ -67,4 +70,3 @@ class ForegroundUsageTracker(context: Context) {
         return delta
     }
 }
-
