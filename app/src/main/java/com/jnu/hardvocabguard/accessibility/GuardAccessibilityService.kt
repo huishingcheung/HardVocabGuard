@@ -69,9 +69,11 @@ class GuardAccessibilityService : AccessibilityService() {
                     return@launch
                 }
 
-                settings.setAlarmActive(true)
-                AlarmForegroundService.start(this@GuardAccessibilityService)
-                bringBackToTarget(now)
+                if (!state.alarmActive) {
+                    settings.setAlarmActive(true)
+                    AlarmForegroundService.start(this@GuardAccessibilityService)
+                    bringBackToTarget(now)
+                }
                 return@launch
             }
 
