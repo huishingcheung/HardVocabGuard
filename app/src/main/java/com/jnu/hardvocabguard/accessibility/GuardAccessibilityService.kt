@@ -35,6 +35,7 @@ class GuardAccessibilityService : AccessibilityService() {
     private var lastBringBackAt: Long = 0L
     private var lastRecentsAttemptAt: Long = 0L
     private var recentsAttemptCount: Int = 0
+    private var hasSeenTargetApp: Boolean = false
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -66,12 +67,16 @@ class GuardAccessibilityService : AccessibilityService() {
 
             val pkg = event.packageName?.toString()
 
+            if (pkg == AppConstants.TARGET_PACKAGE_NAME) {
+                hasSeenTargetApp = true
+            }
+
             if (inLaunchGrace && pkg != null && pkg in TRANSIENT_ALLOWED_PACKAGES) {
                 return@launch
             }
 
             if (!AllowedPackages.isAllowed(this@GuardAccessibilityService, pkg)) {
-                if (inGrace) {
+                if (inGrace && !hasSeenTargetApp) {
                     return@launch
                 }
 
