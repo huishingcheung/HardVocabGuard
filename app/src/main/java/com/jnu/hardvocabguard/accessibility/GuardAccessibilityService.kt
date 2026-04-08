@@ -99,7 +99,7 @@ class GuardAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val START_GRACE_MS = 10_000L
-        private const val TARGET_LAUNCH_GRACE_MS = 20_000L
+        private const val TARGET_LAUNCH_GRACE_MS = 30_000L
 
         private val TRANSIENT_ALLOWED_PACKAGES = setOf(
             "com.miui.home",

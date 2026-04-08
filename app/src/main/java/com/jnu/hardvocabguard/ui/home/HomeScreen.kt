@@ -142,15 +142,23 @@ fun HomeScreen(
                 }
 
                 val mins = minutes.toLongOrNull() ?: 30L
+
+                scope.launch(Dispatchers.Default) {
+                    settings.markTargetLaunched(System.currentTimeMillis())
+                }
+
+                val launched = TargetAppLauncher.launchTargetApp(context)
+                if (!launched) {
+                    showInstallDialog = true
+                    return@Button
+                }
+
                 SupervisionForegroundService.start(
                     context = context,
                     minutesGoal = mins,
                     wordsGoal = 1,
                     ruleMode = ruleMode,
                 )
-                scope.launch(Dispatchers.Default) {
-                    settings.markTargetLaunched(System.currentTimeMillis())
-                }
             }) {
                 Text("启动监督模式")
             }
