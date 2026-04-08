@@ -3,6 +3,8 @@ package com.jnu.hardvocabguard.core
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 
 object TargetAppLauncher {
@@ -45,7 +47,9 @@ object TargetAppLauncher {
             }.getOrDefault(false)
         }
 
-        Toast.makeText(context, "未检测到‘不背单词’已安装（包名：$pkg）", Toast.LENGTH_LONG).show()
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(context, "未检测到‘不背单词’已安装（包名：$pkg）", Toast.LENGTH_LONG).show()
+        }
         return false
     }
 

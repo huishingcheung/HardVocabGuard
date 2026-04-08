@@ -98,6 +98,31 @@ fun HomeScreen(
                 label = { Text("时长目标（分钟）") },
                 singleLine = true,
             )
+
+            Text(if (emergencyHash.isNullOrBlank()) "紧急解锁：未设置（必须先设置才能启动）" else "紧急解锁：已设置")
+            OutlinedTextField(
+                value = emergencyPwd,
+                onValueChange = { emergencyPwd = it.filter { c -> c.isDigit() }.take(6) },
+                label = { Text("设置/修改紧急密码(6位数字)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                singleLine = true,
+            )
+            Button(onClick = {
+                val pwd = emergencyPwd
+                if (!pwd.matches(Regex("\\d{6}"))) return@Button
+                val salt = PasswordHasher.createSaltBase64()
+                val hash = PasswordHasher.hashSixDigitPassword(pwd, salt)
+                scope.launch(Dispatchers.Default) { settings.setEmergencyPasswordHash(salt, hash) }
+            }) {
+                Text("保存紧急密码")
+            }
+
+            if (!crashText.isNullOrBlank()) {
+                Button(onClick = { showCrashDialog = true }) {
+                    Text("查看上次崩溃日志")
+                }
+            }
+
             Button(onClick = {
                 val usageOk = PermissionStatus.hasUsageAccess(context)
                 val a11yOk = PermissionStatus.isAccessibilityServiceEnabled(
@@ -144,31 +169,6 @@ fun HomeScreen(
 
             Button(onClick = onOpenStats) {
                 Text("查看学习统计")
-            }
-
-            Text(if (emergencyHash.isNullOrBlank()) "紧急解锁：未设置" else "紧急解锁：已设置")
-
-            if (!crashText.isNullOrBlank()) {
-                Button(onClick = { showCrashDialog = true }) {
-                    Text("查看上次崩溃日志")
-                }
-            }
-
-            OutlinedTextField(
-                value = emergencyPwd,
-                onValueChange = { emergencyPwd = it.filter { c -> c.isDigit() }.take(6) },
-                label = { Text("设置/修改紧急密码(6位数字)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                singleLine = true,
-            )
-            Button(onClick = {
-                val pwd = emergencyPwd
-                if (!pwd.matches(Regex("\\d{6}"))) return@Button
-                val salt = PasswordHasher.createSaltBase64()
-                val hash = PasswordHasher.hashSixDigitPassword(pwd, salt)
-                scope.launch(Dispatchers.Default) { settings.setEmergencyPasswordHash(salt, hash) }
-            }) {
-                Text("保存紧急密码")
             }
         }
     }
