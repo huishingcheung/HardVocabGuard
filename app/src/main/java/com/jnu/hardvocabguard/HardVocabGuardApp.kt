@@ -1,6 +1,7 @@
 package com.jnu.hardvocabguard
 
 import android.app.Application
+import android.content.Context
 import java.io.PrintWriter
 import java.io.StringWriter
 import com.jnu.hardvocabguard.notify.Notifications
@@ -28,7 +29,7 @@ object CrashStore {
                 val sw = StringWriter()
                 e.printStackTrace(PrintWriter(sw))
                 val content = "Thread=${t.name}\n\n${sw}"
-                app.openFileOutput(FILE_NAME, MODE_PRIVATE).use { it.write(content.toByteArray()) }
+                app.openFileOutput(FILE_NAME, Context.MODE_PRIVATE).use { it.write(content.toByteArray()) }
             }
             defaultHandler?.uncaughtException(t, e)
         }
