@@ -25,14 +25,30 @@ jobs:
 
       - name: Prepare Signing (Optional)
         run: |
-          if [ -n "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" ] && [ -n "${{ secrets.SIGNING_PASSWORD }}" ]; then
+          KEYSTORE_B64="${{ secrets.SIGNING_KEYSTORE_BASE64 }}"
+          SIGNING_PASSWORD="${{ secrets.SIGNING_PASSWORD }}"
+
+          STORE_PW="${{ secrets.SIGNING_STORE_PASSWORD }}"
+          KEY_PW="${{ secrets.SIGNING_KEY_PASSWORD }}"
+          KEY_ALIAS="${{ secrets.SIGNING_KEY_ALIAS }}"
+
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$SIGNING_PASSWORD" ]; then
             mkdir -p keystore
-            echo "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 -d > keystore/release.jks
+            echo "$KEYSTORE_B64" | base64 -d > keystore/release.jks
             cat > keystore.properties <<EOF
           storeFile=keystore/release.jks
-          storePassword=${{ secrets.SIGNING_PASSWORD }}
+          storePassword=$SIGNING_PASSWORD
           keyAlias=hardvocabguard
-          keyPassword=${{ secrets.SIGNING_PASSWORD }}
+          keyPassword=$SIGNING_PASSWORD
+          EOF
+          elif [ -n "$KEYSTORE_B64" ] && [ -n "$STORE_PW" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PW" ]; then
+            mkdir -p keystore
+            echo "$KEYSTORE_B64" | base64 -d > keystore/release.jks
+            cat > keystore.properties <<EOF
+          storeFile=keystore/release.jks
+          storePassword=$STORE_PW
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PW
           EOF
           else
             echo "Signing secrets missing, build will use unsigned release config."
