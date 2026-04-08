@@ -7,8 +7,14 @@ import com.jnu.hardvocabguard.core.TargetAppLauncher
 class LaunchTargetActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        TargetAppLauncher.launchTargetApp(this)
-        finish()
+        val launched = TargetAppLauncher.launchTargetApp(this)
+        if (launched) {
+            moveTaskToBack(true)
+            finishAffinity()
+            finishAndRemoveTask()
+        } else {
+            finish()
+        }
         overridePendingTransition(0, 0)
     }
 }
