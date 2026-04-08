@@ -46,6 +46,14 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.launch.LaunchTargetActivity"
+            android:exported="false"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.HardVocabGuard.Transparent" />
+
         <service
             android:name=".service.SupervisionForegroundService"
             android:exported="false"
