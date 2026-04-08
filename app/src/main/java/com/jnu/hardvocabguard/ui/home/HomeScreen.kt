@@ -66,6 +66,7 @@ fun HomeScreen(
     var crashText by remember { mutableStateOf<String?>(null) }
     var showCrashDialog by remember { mutableStateOf(false) }
     var showInstallDialog by remember { mutableStateOf(false) }
+    var showPwdDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (crashText != null) return@LaunchedEffect
@@ -103,6 +104,12 @@ fun HomeScreen(
                     context = context,
                     serviceClassName = "com.jnu.hardvocabguard.accessibility.GuardAccessibilityService",
                 )
+
+                val pwdOk = !emergencyHash.isNullOrBlank()
+                if (!pwdOk) {
+                    showPwdDialog = true
+                    return@Button
+                }
 
                 if (!usageOk || !a11yOk) {
                     showPermDialog = true
@@ -206,6 +213,21 @@ fun HomeScreen(
             },
             dismissButton = {
                 Button(onClick = { showInstallDialog = false }) { Text("知道了") }
+            }
+        )
+    }
+
+    if (showPwdDialog) {
+        AlertDialog(
+            onDismissRequest = { showPwdDialog = false },
+            title = { Text("请先设置紧急密码") },
+            text = {
+                Text(
+                    "为了避免你忘记设置紧急解锁而无法退出监督模式，必须先设置 6 位数字紧急密码后才能启动监督。"
+                )
+            },
+            confirmButton = {
+                Button(onClick = { showPwdDialog = false }) { Text("我去设置") }
             }
         )
     }
