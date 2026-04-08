@@ -1,7 +1,6 @@
 package com.jnu.hardvocabguard.ui.home
 
 import android.content.Intent
-import android.app.Activity
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -154,7 +153,12 @@ fun HomeScreen(
                 if (!launched) {
                     showInstallDialog = true
                 } else {
-                    (context as? Activity)?.moveTaskToBack(true)
+                    scope.launch {
+                        kotlinx.coroutines.delay(500)
+                        TargetAppLauncher.launchTargetApp(context)
+                        kotlinx.coroutines.delay(1000)
+                        TargetAppLauncher.launchTargetApp(context)
+                    }
                 }
             }) {
                 Text("启动监督模式")
