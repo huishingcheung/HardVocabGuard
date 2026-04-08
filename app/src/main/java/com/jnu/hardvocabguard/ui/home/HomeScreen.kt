@@ -140,14 +140,11 @@ fun HomeScreen(
                 }
 
                 val mins = minutes.toLongOrNull() ?: 30L
-                SupervisionForegroundService.start(
-                    context = context,
-                    minutesGoal = mins,
-                    wordsGoal = 1,
-                    ruleMode = ruleMode,
+                context.startActivity(
+                    Intent(context, LaunchTargetActivity::class.java).apply {
+                        putExtra(LaunchTargetActivity.EXTRA_MINUTES_GOAL, mins)
+                    }
                 )
-
-                context.startActivity(Intent(context, LaunchTargetActivity::class.java))
             }) {
                 Text("启动监督模式")
             }
