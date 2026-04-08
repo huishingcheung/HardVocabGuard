@@ -1,5 +1,6 @@
 package com.jnu.hardvocabguard.ui.home
 
+import android.app.Activity
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
@@ -154,10 +155,8 @@ fun HomeScreen(
                     showInstallDialog = true
                 } else {
                     scope.launch {
-                        kotlinx.coroutines.delay(500)
-                        TargetAppLauncher.launchTargetApp(context)
-                        kotlinx.coroutines.delay(1000)
-                        TargetAppLauncher.launchTargetApp(context)
+                        kotlinx.coroutines.delay(300)
+                        (context as? Activity)?.finish()
                     }
                 }
             }) {
