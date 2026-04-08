@@ -41,6 +41,7 @@ import com.jnu.hardvocabguard.service.SupervisionForegroundService
 import kotlinx.coroutines.flow.firstOrNull
 import android.content.Intent
 import kotlinx.coroutines.launch
+import android.app.Activity
 
 /**
  * 全屏报警页：
@@ -103,6 +104,7 @@ private fun AlarmScreen(onUnlocked: () -> Unit) {
                 if (!ok) {
                     message = "未检测到不背单词可启动，请确认已安装官方版本"
                 }
+                (context as? Activity)?.finish()
             }
         }) {
             Text("返回不背单词")

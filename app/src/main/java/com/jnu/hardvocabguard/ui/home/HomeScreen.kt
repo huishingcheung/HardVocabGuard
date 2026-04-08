@@ -2,6 +2,9 @@ package com.jnu.hardvocabguard.ui.home
 
 import android.content.Intent
 import android.provider.Settings
+import android.app.Activity
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -142,22 +145,25 @@ fun HomeScreen(
                 }
 
                 val mins = minutes.toLongOrNull() ?: 30L
-
-                scope.launch(Dispatchers.Default) {
-                    settings.markTargetLaunched(System.currentTimeMillis())
-                }
-
-                val launched = TargetAppLauncher.launchTargetApp(context)
-                if (!launched) {
-                    showInstallDialog = true
-                    return@Button
-                }
-
                 SupervisionForegroundService.start(
                     context = context,
                     minutesGoal = mins,
                     wordsGoal = 1,
                     ruleMode = ruleMode,
+                )
+
+                Handler(Looper.getMainLooper()).postDelayed(
+                    {
+                        val launched = TargetAppLauncher.launchTargetApp(context)
+                        if (!launched) {
+                            showInstallDialog = true
+                            return@postDelayed
+                        }
+
+                        val act = context as? Activity
+                        act?.moveTaskToBack(true)
+                    },
+                    600L,
                 )
             }) {
                 Text("启动监督模式")
