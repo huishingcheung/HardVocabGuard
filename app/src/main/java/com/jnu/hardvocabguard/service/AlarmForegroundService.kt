@@ -203,6 +203,9 @@ class AlarmForegroundService : Service() {
 
         fun stop(context: Context) {
             runCatching {
+                context.startService(Intent(context, AlarmForegroundService::class.java).apply { action = ACTION_STOP })
+            }
+            runCatching {
                 context.stopService(Intent(context, AlarmForegroundService::class.java))
             }
         }

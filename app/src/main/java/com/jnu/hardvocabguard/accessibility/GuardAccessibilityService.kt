@@ -58,7 +58,6 @@ class GuardAccessibilityService : AccessibilityService() {
             val pkg = event.packageName?.toString()
             if (!AllowedPackages.isAllowed(this@GuardAccessibilityService, pkg)) {
                 if (inGrace) {
-                    bringBackToTarget(now)
                     return@launch
                 }
 
