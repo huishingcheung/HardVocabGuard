@@ -42,7 +42,7 @@ EOF
           fi
 
       - name: Assemble Release
-        run: ./gradlew :app:assembleRelease -x lint -x lintVitalRelease -x lintVitalReportRelease
+        run: ./gradlew :app:assembleRelease -x lint
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

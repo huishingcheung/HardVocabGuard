@@ -24,7 +24,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Assemble
-        run: ./gradlew :app:assembleDebug :app:assembleRelease -x lint -x lintVitalRelease -x lintVitalReportRelease
+        run: ./gradlew :app:assembleDebug :app:assembleRelease -x lint
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
