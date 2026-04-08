@@ -1,6 +1,5 @@
 package com.jnu.hardvocabguard.ui.home
 
-import android.content.Intent
 import android.provider.Settings
 import android.app.Activity
 import android.os.Handler
@@ -159,11 +158,15 @@ fun HomeScreen(
                             showInstallDialog = true
                             return@postDelayed
                         }
-
-                        val act = context as? Activity
-                        act?.moveTaskToBack(true)
                     },
                     600L,
+                )
+
+                Handler(Looper.getMainLooper()).postDelayed(
+                    {
+                        TargetAppLauncher.launchTargetApp(context)
+                    },
+                    2000L,
                 )
             }) {
                 Text("启动监督模式")

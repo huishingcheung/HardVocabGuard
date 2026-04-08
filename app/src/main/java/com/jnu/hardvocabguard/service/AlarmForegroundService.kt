@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import com.jnu.hardvocabguard.R
 import com.jnu.hardvocabguard.core.AppConstants
 import com.jnu.hardvocabguard.data.SettingsStore
+import com.jnu.hardvocabguard.notify.Notifications
 import com.jnu.hardvocabguard.ui.alarm.AlarmActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,6 +47,7 @@ class AlarmForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        Notifications.ensureChannels(this)
         settings = SettingsStore(this)
     }
 
@@ -78,14 +80,11 @@ class AlarmForegroundService : Service() {
     private fun startAlarm() {
         if (alarmStarted) return
         alarmStarted = true
-        startForeground(
-            NOTIF_ID,
-            buildAlarmNotification(),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-        )
+        val notif = buildAlarmNotification()
+        startForeground(NOTIF_ID, notif, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         startVibration()
         startSound()
-        launchAlarmActivity()
+        launchAlarmUiBestEffort()
 
         scope.launch {
             while (true) {
@@ -160,8 +159,27 @@ class AlarmForegroundService : Service() {
     private fun launchAlarmActivity() {
         val intent = Intent(this, AlarmActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         runCatching { startActivity(intent) }
+    }
+
+    private fun launchAlarmUiBestEffort() {
+        launchAlarmActivity()
+        runCatching {
+            val pi = PendingIntent.getActivity(
+                this,
+                0,
+                Intent(this, AlarmActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                },
+                PendingIntent.FLAG_IMMUTABLE
+            )
+            pi.send()
+        }
     }
 
     private fun buildAlarmNotification(): Notification {
