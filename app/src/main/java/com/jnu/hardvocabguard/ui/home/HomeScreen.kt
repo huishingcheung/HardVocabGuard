@@ -148,10 +148,8 @@ fun HomeScreen(
                     wordsGoal = 1,
                     ruleMode = ruleMode,
                 )
-
-                val launched = TargetAppLauncher.launchTargetApp(context)
-                if (!launched) {
-                    showInstallDialog = true
+                scope.launch(Dispatchers.Default) {
+                    settings.markTargetLaunched(System.currentTimeMillis())
                 }
             }) {
                 Text("启动监督模式")

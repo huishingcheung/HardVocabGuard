@@ -52,10 +52,18 @@ class GuardAccessibilityService : AccessibilityService() {
             if (!state.active) return@launch
             if (state.isGoalReached()) return@launch
 
+            val lastLaunch = settings.lastTargetLaunchEpochFlow().first()
+
             val now = System.currentTimeMillis()
             val inGrace = state.sessionStartEpochMillis > 0L && (now - state.sessionStartEpochMillis) < START_GRACE_MS
+            val inLaunchGrace = lastLaunch > 0L && (now - lastLaunch) < TARGET_LAUNCH_GRACE_MS
 
             val pkg = event.packageName?.toString()
+
+            if (inLaunchGrace && pkg != null && pkg in TRANSIENT_ALLOWED_PACKAGES) {
+                return@launch
+            }
+
             if (!AllowedPackages.isAllowed(this@GuardAccessibilityService, pkg)) {
                 if (inGrace) {
                     return@launch
@@ -91,6 +99,19 @@ class GuardAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val START_GRACE_MS = 10_000L
+        private const val TARGET_LAUNCH_GRACE_MS = 20_000L
+
+        private val TRANSIENT_ALLOWED_PACKAGES = setOf(
+            "com.miui.home",
+            "com.miui.securitycenter",
+            "com.miui.permcenter",
+            "com.lbe.security.miui",
+            "com.android.permissioncontroller",
+            "com.google.android.permissioncontroller",
+            "com.android.packageinstaller",
+            "com.miui.packageinstaller",
+            "com.android.settings",
+        )
     }
 }
 

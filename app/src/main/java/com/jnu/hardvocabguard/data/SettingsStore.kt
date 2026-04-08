@@ -52,6 +52,7 @@ class SettingsStore(private val context: Context) {
             p[Keys.WORDS_LEARNED] = 0
             p[Keys.ALARM_ACTIVE] = false
             p[Keys.SESSION_START_EPOCH] = nowEpochMillis
+            p[Keys.LAST_TARGET_LAUNCH_EPOCH] = nowEpochMillis
         }
     }
 
@@ -99,6 +100,16 @@ class SettingsStore(private val context: Context) {
         }
     }
 
+    suspend fun markTargetLaunched(nowEpochMillis: Long) {
+        context.settingsDataStore.edit { p ->
+            p[Keys.LAST_TARGET_LAUNCH_EPOCH] = nowEpochMillis
+        }
+    }
+
+    fun lastTargetLaunchEpochFlow(): Flow<Long> {
+        return context.settingsDataStore.data.map { p -> p[Keys.LAST_TARGET_LAUNCH_EPOCH] ?: 0L }
+    }
+
     private fun String.toRuleMode(): RuleMode {
         return runCatching { RuleMode.valueOf(this) }.getOrDefault(RuleMode.DURATION)
     }
@@ -112,6 +123,8 @@ class SettingsStore(private val context: Context) {
         val WORDS_LEARNED = intPreferencesKey("words_learned")
         val ALARM_ACTIVE = booleanPreferencesKey("alarm_active")
         val SESSION_START_EPOCH = longPreferencesKey("session_start_epoch")
+
+        val LAST_TARGET_LAUNCH_EPOCH = longPreferencesKey("last_target_launch_epoch")
 
         val EMERGENCY_SALT = stringPreferencesKey("emergency_salt")
         val EMERGENCY_HASH = stringPreferencesKey("emergency_hash")

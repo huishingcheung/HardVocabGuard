@@ -93,6 +93,8 @@ class SupervisionForegroundService : Service() {
                 nowEpochMillis = System.currentTimeMillis(),
             )
             ensureForegroundShown()
+            val now = System.currentTimeMillis()
+            settings.markTargetLaunched(now)
             TargetAppLauncher.launchTargetApp(this@SupervisionForegroundService)
             runLoop()
         }
