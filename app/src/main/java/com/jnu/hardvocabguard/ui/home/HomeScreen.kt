@@ -1,5 +1,6 @@
 package com.jnu.hardvocabguard.ui.home
 
+import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
