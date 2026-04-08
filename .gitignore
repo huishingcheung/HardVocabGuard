@@ -12,3 +12,5 @@ captures/
 keystore.properties
 hs_err_pid*.log
 replay_pid*.log
+release.jks.base64
+*.jks.base64
