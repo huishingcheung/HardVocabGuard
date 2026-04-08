@@ -45,7 +45,6 @@
             android:name=".service.SupervisionForegroundService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
-        </service>
 
         <service
             android:name=".service.AlarmForegroundService"
