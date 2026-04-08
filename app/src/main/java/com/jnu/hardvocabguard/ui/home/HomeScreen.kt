@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jnu.hardvocabguard.data.SettingsStore
 import com.jnu.hardvocabguard.HardVocabGuardApp
 import com.jnu.hardvocabguard.CrashStore
+import com.jnu.hardvocabguard.core.TargetAppLauncher
 import com.jnu.hardvocabguard.perm.PermissionStatus
 import com.jnu.hardvocabguard.domain.RuleMode
 import com.jnu.hardvocabguard.security.PasswordHasher
@@ -64,6 +65,7 @@ fun HomeScreen(
     var crashText by remember { mutableStateOf<String?>(null) }
     var showCrashDialog by remember { mutableStateOf(false) }
     var showPwdDialog by remember { mutableStateOf(false) }
+    var showLaunchFailDialog by remember { mutableStateOf(false) }
 
     var confirmedTargetOpened by remember { mutableStateOf(false) }
 
@@ -159,6 +161,11 @@ fun HomeScreen(
                     wordsGoal = 1,
                     ruleMode = ruleMode,
                 )
+
+                val ok = TargetAppLauncher.launchTargetApp(context)
+                if (!ok) {
+                    showLaunchFailDialog = true
+                }
             }) {
                 Text("启动监督模式")
             }
@@ -236,6 +243,17 @@ fun HomeScreen(
             },
             confirmButton = {
                 Button(onClick = { showCrashDialog = false }) { Text("关闭") }
+            }
+        )
+    }
+
+    if (showLaunchFailDialog) {
+        AlertDialog(
+            onDismissRequest = { showLaunchFailDialog = false },
+            title = { Text("未能切换到不背单词") },
+            text = { Text("请先确认‘不背单词’已在后台运行，然后从最近任务切回它；Hyper OS 可能拦截自动切换。") },
+            confirmButton = {
+                Button(onClick = { showLaunchFailDialog = false }) { Text("知道了") }
             }
         )
     }
