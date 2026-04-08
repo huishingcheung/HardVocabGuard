@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">硬要背单词</string>
+    <string name="accessibility_desc">监督模式：仅允许使用“不背单词”，并统计时长/数量，违规触发报警。</string>
+    <string name="notif_channel_supervision">监督进行中</string>
+    <string name="notif_channel_alarm">违规报警</string>
+</resources>
+
