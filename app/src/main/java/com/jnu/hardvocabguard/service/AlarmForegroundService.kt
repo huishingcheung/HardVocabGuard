@@ -59,10 +59,18 @@ class AlarmForegroundService : Service() {
                 stopSelf()
             }
             else -> {
-                startAlarm()
+                scope.launch {
+                    val state = settings.supervisionStateFlow().first()
+                    if (state.active && state.alarmActive && !state.isGoalReached()) {
+                        startAlarm()
+                    } else {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                        stopSelf()
+                    }
+                }
             }
         }
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     private fun startAlarm() {
