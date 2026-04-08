@@ -32,11 +32,11 @@ jobs:
             mkdir -p keystore
             echo "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 -d > keystore/release.jks
             cat > keystore.properties <<EOF
-storeFile=keystore/release.jks
-storePassword=${{ secrets.SIGNING_PASSWORD }}
-keyAlias=hardvocabguard
-keyPassword=${{ secrets.SIGNING_PASSWORD }}
-EOF
+          storeFile=keystore/release.jks
+          storePassword=${{ secrets.SIGNING_PASSWORD }}
+          keyAlias=hardvocabguard
+          keyPassword=${{ secrets.SIGNING_PASSWORD }}
+          EOF
           else
             echo "Signing secrets missing, build will use unsigned release config."
           fi
