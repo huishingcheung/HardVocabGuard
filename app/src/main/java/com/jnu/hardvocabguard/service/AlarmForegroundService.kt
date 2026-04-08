@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -65,7 +66,11 @@ class AlarmForegroundService : Service() {
     }
 
     private fun startAlarm() {
-        startForeground(NOTIF_ID, buildAlarmNotification())
+        startForeground(
+            NOTIF_ID,
+            buildAlarmNotification(),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+        )
         startVibration()
         startSound()
         launchAlarmActivity()

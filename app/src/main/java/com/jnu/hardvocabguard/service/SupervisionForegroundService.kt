@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -97,7 +98,11 @@ class SupervisionForegroundService : Service() {
     private suspend fun ensureForegroundShown() {
         val state = settings.supervisionStateFlow().first()
         if (!state.active) return
-        startForeground(NOTIF_ID, buildNotification(state))
+        startForeground(
+            NOTIF_ID,
+            buildNotification(state),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+        )
     }
 
     private suspend fun runLoop() {
@@ -112,7 +117,11 @@ class SupervisionForegroundService : Service() {
             }
 
             val newState = settings.supervisionStateFlow().first()
-            startForeground(NOTIF_ID, buildNotification(newState))
+            startForeground(
+                NOTIF_ID,
+                buildNotification(newState),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
 
             if (newState.isGoalReached()) {
                 recordAndStop(SessionEndReason.COMPLETED)
