@@ -1,6 +1,5 @@
 package com.jnu.hardvocabguard.ui.home
 
-import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,7 +36,6 @@ import com.jnu.hardvocabguard.domain.RuleMode
 import com.jnu.hardvocabguard.security.PasswordHasher
 import com.jnu.hardvocabguard.service.AlarmForegroundService
 import com.jnu.hardvocabguard.service.SupervisionForegroundService
-import com.jnu.hardvocabguard.ui.launch.LaunchTargetActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -66,6 +64,8 @@ fun HomeScreen(
     var showCrashDialog by remember { mutableStateOf(false) }
     var showPwdDialog by remember { mutableStateOf(false) }
 
+    var confirmedTargetOpened by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         if (crashText != null) return@LaunchedEffect
         val app = context.applicationContext
@@ -88,7 +88,11 @@ fun HomeScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("仅监督时长：启动后将自动打开‘不背单词’，未达标离开将触发报警。")
+            Text("仅监督时长：未达标离开将触发报警。")
+
+            Text(
+                "重要：Hyper OS 可能限制跨应用拉起。为保证稳定，请先手动打开一次‘不背单词’并留在后台，然后回到这里再启动监督。"
+            )
 
             OutlinedTextField(
                 value = minutes,
@@ -115,6 +119,12 @@ fun HomeScreen(
                 Text("保存紧急密码")
             }
 
+            androidx.compose.material3.Checkbox(
+                checked = confirmedTargetOpened,
+                onCheckedChange = { confirmedTargetOpened = it },
+            )
+            Text("我已手动打开过‘不背单词’并保持在后台")
+
             if (!crashText.isNullOrBlank()) {
                 Button(onClick = { showCrashDialog = true }) {
                     Text("查看上次崩溃日志")
@@ -134,16 +144,19 @@ fun HomeScreen(
                     return@Button
                 }
 
+                if (!confirmedTargetOpened) return@Button
+
                 if (!usageOk || !a11yOk) {
                     showPermDialog = true
                     return@Button
                 }
 
                 val mins = minutes.toLongOrNull() ?: 30L
-                context.startActivity(
-                    Intent(context, LaunchTargetActivity::class.java).apply {
-                        putExtra(LaunchTargetActivity.EXTRA_MINUTES_GOAL, mins)
-                    }
+                SupervisionForegroundService.start(
+                    context = context,
+                    minutesGoal = mins,
+                    wordsGoal = 1,
+                    ruleMode = ruleMode,
                 )
             }) {
                 Text("启动监督模式")
