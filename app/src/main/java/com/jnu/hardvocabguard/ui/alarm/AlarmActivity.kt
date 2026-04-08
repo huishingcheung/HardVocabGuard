@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import com.jnu.hardvocabguard.core.AppConstants
+import com.jnu.hardvocabguard.core.TargetAppLauncher
 import com.jnu.hardvocabguard.data.SettingsStore
 import com.jnu.hardvocabguard.security.PasswordHasher
 import com.jnu.hardvocabguard.service.AlarmForegroundService
@@ -94,10 +95,9 @@ private fun AlarmScreen(onUnlocked: () -> Unit) {
         Text(message, style = MaterialTheme.typography.bodyLarge, color = Color.White)
 
         Button(onClick = {
-            val launch = context.packageManager.getLaunchIntentForPackage(AppConstants.TARGET_PACKAGE_NAME)
-            if (launch != null) {
-                launch.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(launch)
+            val ok = TargetAppLauncher.launchTargetApp(context)
+            if (!ok) {
+                message = "未检测到不背单词可启动，请确认已安装官方版本"
             }
         }) {
             Text("返回不背单词")
@@ -129,6 +129,7 @@ private fun AlarmScreen(onUnlocked: () -> Unit) {
                 settings.stopSupervision()
                 settings.setAlarmActive(false)
                 AlarmForegroundService.stop(context)
+                context.stopService(Intent(context, AlarmForegroundService::class.java))
                 context.startService(Intent(context, SupervisionForegroundService::class.java).apply {
                     action = SupervisionForegroundService.ACTION_STOP
                     putExtra(SupervisionForegroundService.EXTRA_END_REASON, com.jnu.hardvocabguard.domain.SessionEndReason.EMERGENCY_UNLOCK.name)

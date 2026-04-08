@@ -18,6 +18,7 @@ import com.jnu.hardvocabguard.domain.RuleMode
 import com.jnu.hardvocabguard.domain.SessionEndReason
 import com.jnu.hardvocabguard.notify.Notifications
 import com.jnu.hardvocabguard.usage.ForegroundUsageTracker
+import com.jnu.hardvocabguard.core.TargetAppLauncher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -92,6 +93,7 @@ class SupervisionForegroundService : Service() {
                 nowEpochMillis = System.currentTimeMillis(),
             )
             ensureForegroundShown()
+            TargetAppLauncher.launchTargetApp(this@SupervisionForegroundService)
             runLoop()
         }
     }

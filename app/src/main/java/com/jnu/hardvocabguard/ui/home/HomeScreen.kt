@@ -34,6 +34,7 @@ import com.jnu.hardvocabguard.HardVocabGuardApp
 import com.jnu.hardvocabguard.CrashStore
 import com.jnu.hardvocabguard.perm.PermissionStatus
 import com.jnu.hardvocabguard.core.AppConstants
+import com.jnu.hardvocabguard.core.TargetAppLauncher
 import com.jnu.hardvocabguard.domain.RuleMode
 import com.jnu.hardvocabguard.security.PasswordHasher
 import com.jnu.hardvocabguard.service.AlarmForegroundService
@@ -64,6 +65,7 @@ fun HomeScreen(
     var showPermDialog by remember { mutableStateOf(false) }
     var crashText by remember { mutableStateOf<String?>(null) }
     var showCrashDialog by remember { mutableStateOf(false) }
+    var showInstallDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (crashText != null) return@LaunchedEffect
@@ -115,10 +117,9 @@ fun HomeScreen(
                     ruleMode = ruleMode,
                 )
 
-                val launch = context.packageManager.getLaunchIntentForPackage(AppConstants.TARGET_PACKAGE_NAME)
-                if (launch != null) {
-                    launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    context.startActivity(launch)
+                val launched = TargetAppLauncher.launchTargetApp(context)
+                if (!launched) {
+                    showInstallDialog = true
                 }
             }) {
                 Text("启动监督模式")
@@ -188,6 +189,23 @@ fun HomeScreen(
                     showPermDialog = false
                     context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 }) { Text("去开使用情况") }
+            }
+        )
+    }
+
+    if (showInstallDialog) {
+        AlertDialog(
+            onDismissRequest = { showInstallDialog = false },
+            title = { Text("未找到不背单词") },
+            text = { Text("未检测到‘不背单词’应用可启动。请确认已安装官方版本（包名：${AppConstants.TARGET_PACKAGE_NAME}）。") },
+            confirmButton = {
+                Button(onClick = {
+                    showInstallDialog = false
+                    TargetAppLauncher.openTargetAppStoreOrDetails(context)
+                }) { Text("去应用商店") }
+            },
+            dismissButton = {
+                Button(onClick = { showInstallDialog = false }) { Text("知道了") }
             }
         )
     }
