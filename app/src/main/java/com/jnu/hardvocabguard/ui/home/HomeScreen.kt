@@ -1,9 +1,8 @@
 package com.jnu.hardvocabguard.ui.home
 
 import android.content.Intent
+import android.app.Activity
 import android.provider.Settings
-import android.os.Handler
-import android.os.Looper
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -151,23 +150,12 @@ fun HomeScreen(
                     ruleMode = ruleMode,
                 )
 
-                Handler(Looper.getMainLooper()).postDelayed(
-                    {
-                        val launched = TargetAppLauncher.launchTargetApp(context)
-                        if (!launched) {
-                            showInstallDialog = true
-                            return@postDelayed
-                        }
-                    },
-                    600L,
-                )
-
-                Handler(Looper.getMainLooper()).postDelayed(
-                    {
-                        TargetAppLauncher.launchTargetApp(context)
-                    },
-                    2000L,
-                )
+                val launched = TargetAppLauncher.launchTargetApp(context)
+                if (!launched) {
+                    showInstallDialog = true
+                } else {
+                    (context as? Activity)?.moveTaskToBack(true)
+                }
             }) {
                 Text("启动监督模式")
             }
