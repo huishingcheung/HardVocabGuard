@@ -79,6 +79,11 @@ fun PermissionGuideScreen(
                 Text(if (PermissionStatus.hasUsageAccess(context)) "2. 使用情况访问已开启" else "2. 开启使用情况访问")
             }
 
+            Text(
+                text = "提示：这里要开启的是‘本应用(硬要背单词)’的使用情况访问权限，不是选择‘不背单词’。",
+                style = MaterialTheme.typography.bodySmall
+            )
+
             Button(onClick = {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)

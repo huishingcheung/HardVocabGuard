@@ -1,13 +1,11 @@
 package com.jnu.hardvocabguard.data
 
 import android.content.Context
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import com.jnu.hardvocabguard.domain.RuleMode
 import com.jnu.hardvocabguard.domain.SupervisionState
 import kotlinx.coroutines.flow.Flow
@@ -21,10 +19,8 @@ import kotlinx.coroutines.flow.map
  * 说明：使用 DataStore（Jetpack 官方）保证本地安全、可迁移且无第三方依赖。
  */
 class SettingsStore(private val context: Context) {
-    private val Context.ds by preferencesDataStore(name = "settings")
-
     fun supervisionStateFlow(): Flow<SupervisionState> {
-        return context.ds.data.map { p ->
+        return context.settingsDataStore.data.map { p ->
             val active = p[Keys.SUPERVISION_ACTIVE] ?: false
             val ruleMode = (p[Keys.RULE_MODE] ?: RuleMode.DURATION.name).toRuleMode()
             val minutesGoal = p[Keys.MINUTES_GOAL] ?: 30L
@@ -47,7 +43,7 @@ class SettingsStore(private val context: Context) {
     }
 
     suspend fun startSupervision(ruleMode: RuleMode, minutesGoal: Long, wordsGoal: Int, nowEpochMillis: Long) {
-        context.ds.edit { p ->
+        context.settingsDataStore.edit { p ->
             p[Keys.SUPERVISION_ACTIVE] = true
             p[Keys.RULE_MODE] = ruleMode.name
             p[Keys.MINUTES_GOAL] = minutesGoal
@@ -60,21 +56,21 @@ class SettingsStore(private val context: Context) {
     }
 
     suspend fun stopSupervision() {
-        context.ds.edit { p ->
+        context.settingsDataStore.edit { p ->
             p[Keys.SUPERVISION_ACTIVE] = false
             p[Keys.ALARM_ACTIVE] = false
         }
     }
 
     suspend fun setAlarmActive(active: Boolean) {
-        context.ds.edit { p ->
+        context.settingsDataStore.edit { p ->
             p[Keys.ALARM_ACTIVE] = active
         }
     }
 
     suspend fun addUsedMillis(delta: Long) {
         if (delta <= 0) return
-        context.ds.edit { p ->
+        context.settingsDataStore.edit { p ->
             val cur = p[Keys.USED_MILLIS] ?: 0L
             p[Keys.USED_MILLIS] = cur + delta
         }
@@ -82,22 +78,22 @@ class SettingsStore(private val context: Context) {
 
     suspend fun incrementWordsLearned(delta: Int = 1) {
         if (delta <= 0) return
-        context.ds.edit { p ->
+        context.settingsDataStore.edit { p ->
             val cur = p[Keys.WORDS_LEARNED] ?: 0
             p[Keys.WORDS_LEARNED] = cur + delta
         }
     }
 
     fun emergencySaltFlow(): Flow<String?> {
-        return context.ds.data.map { p -> p[Keys.EMERGENCY_SALT] }
+        return context.settingsDataStore.data.map { p -> p[Keys.EMERGENCY_SALT] }
     }
 
     fun emergencyHashFlow(): Flow<String?> {
-        return context.ds.data.map { p -> p[Keys.EMERGENCY_HASH] }
+        return context.settingsDataStore.data.map { p -> p[Keys.EMERGENCY_HASH] }
     }
 
     suspend fun setEmergencyPasswordHash(saltBase64: String, hashBase64: String) {
-        context.ds.edit { p ->
+        context.settingsDataStore.edit { p ->
             p[Keys.EMERGENCY_SALT] = saltBase64
             p[Keys.EMERGENCY_HASH] = hashBase64
         }
@@ -121,4 +117,3 @@ class SettingsStore(private val context: Context) {
         val EMERGENCY_HASH = stringPreferencesKey("emergency_hash")
     }
 }
-

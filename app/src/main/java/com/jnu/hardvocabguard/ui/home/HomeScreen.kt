@@ -62,6 +62,7 @@ fun HomeScreen(
 
     var showPermDialog by remember { mutableStateOf(false) }
     var crashText by remember { mutableStateOf<String?>(null) }
+    var showCrashDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (crashText != null) return@LaunchedEffect
@@ -154,14 +155,9 @@ fun HomeScreen(
             Text(if (emergencyHash.isNullOrBlank()) "紧急解锁：未设置" else "紧急解锁：已设置")
 
             if (!crashText.isNullOrBlank()) {
-                Text("上次启动发生崩溃（已记录本地日志）")
-                OutlinedTextField(
-                    value = crashText ?: "",
-                    onValueChange = {},
-                    label = { Text("崩溃日志") },
-                    readOnly = true,
-                    maxLines = 6,
-                )
+                Button(onClick = { showCrashDialog = true }) {
+                    Text("查看上次崩溃日志")
+                }
             }
 
             OutlinedTextField(
@@ -206,6 +202,25 @@ fun HomeScreen(
                     showPermDialog = false
                     context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 }) { Text("去开使用情况") }
+            }
+        )
+    }
+
+    if (showCrashDialog) {
+        AlertDialog(
+            onDismissRequest = { showCrashDialog = false },
+            title = { Text("上次崩溃日志") },
+            text = {
+                OutlinedTextField(
+                    value = crashText ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    maxLines = 12,
+                    label = { Text("请复制发给我") },
+                )
+            },
+            confirmButton = {
+                Button(onClick = { showCrashDialog = false }) { Text("关闭") }
             }
         )
     }
