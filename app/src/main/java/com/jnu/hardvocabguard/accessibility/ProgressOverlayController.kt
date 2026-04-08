@@ -45,7 +45,7 @@ class ProgressOverlayController(
                 if (state.active) {
                     ensureAdded()
                     title.text = if (state.alarmActive) "违规报警中" else "监督进行中"
-                    progress.text = "时长：${state.usedMinutes}/${state.minutesGoal} 分钟\n数量：${state.wordsLearned}/${state.wordsGoal}"
+                    progress.text = "时长：${state.usedMinutes}/${state.minutesGoal} 分钟"
                 } else {
                     removeIfNeeded()
                 }
@@ -74,17 +74,8 @@ class ProgressOverlayController(
             textSize = 12f
             text = ""
         }
-        val plusOne = Button(context).apply {
-            text = "+1"
-            setOnClickListener {
-                scope.launch(Dispatchers.Default) {
-                    settings.incrementWordsLearned(1)
-                }
-            }
-        }
         container.addView(title)
         container.addView(progress)
-        container.addView(plusOne)
         return container
     }
 

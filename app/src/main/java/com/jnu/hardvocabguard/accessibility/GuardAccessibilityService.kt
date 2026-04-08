@@ -27,8 +27,7 @@ class GuardAccessibilityService : AccessibilityService() {
     private lateinit var settings: SettingsStore
     private lateinit var overlay: ProgressOverlayController
 
-    private var lastWordMatchAt: Long = 0L
-    private var lastWordMatchSignature: String = ""
+    private var lastBringBackAt: Long = 0L
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -40,56 +39,40 @@ class GuardAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
+        if (
+            event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+            event.eventType != AccessibilityEvent.TYPE_WINDOWS_CHANGED
+        ) {
+            return
+        }
+
         scope.launch {
             val state = settings.supervisionStateFlow().first()
             if (!state.active) return@launch
             if (state.isGoalReached()) return@launch
 
+            val now = System.currentTimeMillis()
+            val inGrace = state.sessionStartEpochMillis > 0L && (now - state.sessionStartEpochMillis) < START_GRACE_MS
+
             val pkg = event.packageName?.toString()
             if (!AllowedPackages.isAllowed(this@GuardAccessibilityService, pkg)) {
+                if (inGrace) {
+                    bringBackToTarget(now)
+                    return@launch
+                }
+
                 settings.setAlarmActive(true)
                 AlarmForegroundService.start(this@GuardAccessibilityService)
-                launchTargetAppBestEffort()
+                bringBackToTarget(now)
                 return@launch
             }
-
-            if (pkg == AppConstants.TARGET_PACKAGE_NAME) {
-                maybeCountWord(event)
-            }
         }
     }
 
-    private suspend fun maybeCountWord(event: AccessibilityEvent) {
-        val texts = buildList {
-            event.text?.forEach { add(it.toString()) }
-            event.contentDescription?.toString()?.let { add(it) }
-        }.filter { it.isNotBlank() }
-
-        if (texts.isEmpty()) return
-
-        val joined = texts.joinToString("|")
-        val signature = "${event.eventType}:$joined"
-        val now = System.currentTimeMillis()
-
-        if (signature == lastWordMatchSignature && now - lastWordMatchAt < 800L) return
-
-        val matched = texts.any { t ->
-            t.contains("已掌握") ||
-                t.contains("学习完成") ||
-                t.contains("完成") && t.contains("个") ||
-                t.contains("+1")
-        }
-
-        if (!matched) return
-
-        lastWordMatchSignature = signature
-        lastWordMatchAt = now
-        settings.incrementWordsLearned(1)
-    }
-
-    private fun launchTargetAppBestEffort() {
-        val intent = packageManager.getLaunchIntentForPackage(AppConstants.TARGET_PACKAGE_NAME)
-            ?: return
+    private fun bringBackToTarget(now: Long) {
+        if (now - lastBringBackAt < 1_000L) return
+        lastBringBackAt = now
+        val intent = packageManager.getLaunchIntentForPackage(AppConstants.TARGET_PACKAGE_NAME) ?: return
         intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
         runCatching { startActivity(intent) }
     }
@@ -101,6 +84,10 @@ class GuardAccessibilityService : AccessibilityService() {
         overlay.stop()
         scope.cancel()
         super.onDestroy()
+    }
+
+    companion object {
+        private const val START_GRACE_MS = 10_000L
     }
 }
 

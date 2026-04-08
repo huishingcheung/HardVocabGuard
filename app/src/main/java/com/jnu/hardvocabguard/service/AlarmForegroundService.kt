@@ -196,8 +196,12 @@ class AlarmForegroundService : Service() {
         }
 
         fun stop(context: Context) {
-            val intent = Intent(context, AlarmForegroundService::class.java).apply { action = ACTION_STOP }
-            ContextCompat.startForegroundService(context, intent)
+            runCatching {
+                context.startService(Intent(context, AlarmForegroundService::class.java).apply { action = ACTION_STOP })
+            }
+            runCatching {
+                context.stopService(Intent(context, AlarmForegroundService::class.java))
+            }
         }
     }
 }

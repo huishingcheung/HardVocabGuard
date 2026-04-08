@@ -61,6 +61,7 @@ class SupervisionForegroundService : Service() {
                     .let { runCatching { SessionEndReason.valueOf(it) }.getOrDefault(SessionEndReason.MANUAL_STOP) }
                 scope.launch {
                     recordAndStop(reason)
+                    AlarmForegroundService.stop(this@SupervisionForegroundService)
                     stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
                 }
@@ -125,6 +126,7 @@ class SupervisionForegroundService : Service() {
 
             if (newState.isGoalReached()) {
                 recordAndStop(SessionEndReason.COMPLETED)
+                AlarmForegroundService.stop(this@SupervisionForegroundService)
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return
@@ -153,7 +155,7 @@ class SupervisionForegroundService : Service() {
         )
 
         val title = "监督进行中"
-        val text = "时长：${state.usedMinutes}/${state.minutesGoal} 分钟  ·  数量：${state.wordsLearned}/${state.wordsGoal}"
+        val text = "时长：${state.usedMinutes}/${state.minutesGoal} 分钟"
         val alarmText = if (state.alarmActive) "（报警中）" else ""
 
         return NotificationCompat.Builder(this, AppConstants.CHANNEL_SUPERVISION)

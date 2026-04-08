@@ -24,6 +24,7 @@ object AllowedPackages {
             "com.android.phone",
             "com.android.incallui",
             "com.google.android.dialer",
+            "com.android.systemui",
             "com.miui.voip",
             "com.android.server.telecom",
         )

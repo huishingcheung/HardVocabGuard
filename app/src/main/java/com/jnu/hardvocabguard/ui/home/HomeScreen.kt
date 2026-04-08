@@ -33,8 +33,10 @@ import com.jnu.hardvocabguard.data.SettingsStore
 import com.jnu.hardvocabguard.HardVocabGuardApp
 import com.jnu.hardvocabguard.CrashStore
 import com.jnu.hardvocabguard.perm.PermissionStatus
+import com.jnu.hardvocabguard.core.AppConstants
 import com.jnu.hardvocabguard.domain.RuleMode
 import com.jnu.hardvocabguard.security.PasswordHasher
+import com.jnu.hardvocabguard.service.AlarmForegroundService
 import com.jnu.hardvocabguard.service.SupervisionForegroundService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -54,8 +56,7 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
 
     var minutes by remember { mutableStateOf("30") }
-    var words by remember { mutableStateOf("50") }
-    var ruleMode by remember { mutableStateOf(RuleMode.DURATION) }
+    val ruleMode = RuleMode.DURATION
 
     var emergencyPwd by remember { mutableStateOf("") }
     val emergencyHash by settings.emergencyHashFlow().collectAsStateWithLifecycle(initialValue = null)
@@ -86,22 +87,7 @@ fun HomeScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("达标规则二选一：时长统计更稳定；数量统计依赖无障碍识别（不同版本界面可能需微调关键词）。")
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
-                    selected = ruleMode == RuleMode.DURATION,
-                    onClick = { ruleMode = RuleMode.DURATION },
-                    label = { Text("按时长达标") },
-                    colors = FilterChipDefaults.filterChipColors(),
-                )
-                FilterChip(
-                    selected = ruleMode == RuleMode.WORD_COUNT,
-                    onClick = { ruleMode = RuleMode.WORD_COUNT },
-                    label = { Text("按数量达标") },
-                    colors = FilterChipDefaults.filterChipColors(),
-                )
-            }
+            Text("仅监督时长：启动后将自动打开‘不背单词’，未达标离开将触发报警。")
 
             OutlinedTextField(
                 value = minutes,
@@ -109,13 +95,6 @@ fun HomeScreen(
                 label = { Text("时长目标（分钟）") },
                 singleLine = true,
             )
-            OutlinedTextField(
-                value = words,
-                onValueChange = { words = it.filter { c -> c.isDigit() }.take(6) },
-                label = { Text("数量目标（个）") },
-                singleLine = true,
-            )
-
             Button(onClick = {
                 val usageOk = PermissionStatus.hasUsageAccess(context)
                 val a11yOk = PermissionStatus.isAccessibilityServiceEnabled(
@@ -129,20 +108,27 @@ fun HomeScreen(
                 }
 
                 val mins = minutes.toLongOrNull() ?: 30L
-                val w = words.toIntOrNull() ?: 50
                 SupervisionForegroundService.start(
                     context = context,
                     minutesGoal = mins,
-                    wordsGoal = w,
+                    wordsGoal = 1,
                     ruleMode = ruleMode,
                 )
+
+                val launch = context.packageManager.getLaunchIntentForPackage(AppConstants.TARGET_PACKAGE_NAME)
+                if (launch != null) {
+                    launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(launch)
+                }
             }) {
                 Text("启动监督模式")
             }
 
             Button(onClick = {
+                AlarmForegroundService.stop(context)
                 context.startService(Intent(context, SupervisionForegroundService::class.java).apply {
                     action = SupervisionForegroundService.ACTION_STOP
+                    putExtra(SupervisionForegroundService.EXTRA_END_REASON, com.jnu.hardvocabguard.domain.SessionEndReason.MANUAL_STOP.name)
                 })
             }) {
                 Text("结束监督模式")
