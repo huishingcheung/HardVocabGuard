@@ -42,6 +42,7 @@ class AlarmForegroundService : Service() {
     private lateinit var settings: SettingsStore
 
     private var player: MediaPlayer? = null
+    private var alarmStarted: Boolean = false
 
     override fun onCreate() {
         super.onCreate()
@@ -75,6 +76,8 @@ class AlarmForegroundService : Service() {
     }
 
     private fun startAlarm() {
+        if (alarmStarted) return
+        alarmStarted = true
         startForeground(
             NOTIF_ID,
             buildAlarmNotification(),
@@ -99,6 +102,7 @@ class AlarmForegroundService : Service() {
     }
 
     private fun stopAlarm() {
+        alarmStarted = false
         stopVibration()
         stopSound()
     }
@@ -117,6 +121,7 @@ class AlarmForegroundService : Service() {
     }
 
     private fun startSound() {
+        stopSound()
         val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val max = am.getStreamMaxVolume(AudioManager.STREAM_ALARM)
         runCatching { am.setStreamVolume(AudioManager.STREAM_ALARM, max, 0) }
@@ -197,9 +202,6 @@ class AlarmForegroundService : Service() {
         }
 
         fun stop(context: Context) {
-            runCatching {
-                context.startService(Intent(context, AlarmForegroundService::class.java).apply { action = ACTION_STOP })
-            }
             runCatching {
                 context.stopService(Intent(context, AlarmForegroundService::class.java))
             }

@@ -95,9 +95,14 @@ private fun AlarmScreen(onUnlocked: () -> Unit) {
         Text(message, style = MaterialTheme.typography.bodyLarge, color = Color.White)
 
         Button(onClick = {
-            val ok = TargetAppLauncher.launchTargetApp(context)
-            if (!ok) {
-                message = "未检测到不背单词可启动，请确认已安装官方版本"
+            scope.launch {
+                settings.setAlarmActive(false)
+                AlarmForegroundService.stop(context)
+                context.stopService(Intent(context, AlarmForegroundService::class.java))
+                val ok = TargetAppLauncher.launchTargetApp(context)
+                if (!ok) {
+                    message = "未检测到不背单词可启动，请确认已安装官方版本"
+                }
             }
         }) {
             Text("返回不背单词")

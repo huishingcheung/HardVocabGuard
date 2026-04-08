@@ -3,6 +3,7 @@ package com.jnu.hardvocabguard.accessibility
 import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityEvent
 import com.jnu.hardvocabguard.core.AppConstants
+import com.jnu.hardvocabguard.core.TargetAppLauncher
 import com.jnu.hardvocabguard.data.SettingsStore
 import com.jnu.hardvocabguard.service.AlarmForegroundService
 import kotlinx.coroutines.CoroutineScope
@@ -66,15 +67,18 @@ class GuardAccessibilityService : AccessibilityService() {
                 bringBackToTarget(now)
                 return@launch
             }
+
+            if (pkg == AppConstants.TARGET_PACKAGE_NAME && state.alarmActive) {
+                settings.setAlarmActive(false)
+                AlarmForegroundService.stop(this@GuardAccessibilityService)
+            }
         }
     }
 
     private fun bringBackToTarget(now: Long) {
         if (now - lastBringBackAt < 1_000L) return
         lastBringBackAt = now
-        val intent = packageManager.getLaunchIntentForPackage(AppConstants.TARGET_PACKAGE_NAME) ?: return
-        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-        runCatching { startActivity(intent) }
+        TargetAppLauncher.launchTargetApp(this)
     }
 
     override fun onInterrupt() {
